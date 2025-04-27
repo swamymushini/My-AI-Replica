@@ -2,6 +2,7 @@ import json
 import base64
 import requests
 from http.server import BaseHTTPRequestHandler
+from payload import construct_payload  # Importing the function from payload.py
 
 class Handler(BaseHTTPRequestHandler):
 
@@ -24,17 +25,14 @@ class Handler(BaseHTTPRequestHandler):
         # Decode the API key
         api_key = handle_decode(encoded_api_key)
 
-        # Prepare the API request body
+        # Prepare the API request body using the function from payload.py
         api_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}'
         headers = {
             'Content-Type': 'application/json',
         }
 
-        data = {
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }]
-        }
+        # Use the imported function to construct the payload
+        data = construct_payload(prompt)
 
         # Make the API call
         response = requests.post(api_url, headers=headers, data=json.dumps(data))
