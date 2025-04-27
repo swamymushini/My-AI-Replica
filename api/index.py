@@ -1,15 +1,17 @@
 import json
+import base64
 import requests
 from http.server import BaseHTTPRequestHandler
-import base64
 
 class Handler(BaseHTTPRequestHandler):
-    
+
     def handle_api_request(self, prompt):
         # Function to decode the API key
         def handle_decode(encoded):
             try:
-                decoded_string = bytes(encoded, 'utf-8').decode('base64')
+                # Decode the base64 string
+                decoded_bytes = base64.b64decode(encoded)
+                decoded_string = decoded_bytes.decode('utf-8')
                 print('API Key decoded successfully')
                 return decoded_string
             except Exception as error:
@@ -45,15 +47,15 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            prompt = 'Explain how AI works'  # This can be dynamic based on the request
+            prompt = self.path.split("prompt=")[-1]  # Extract the prompt from the query string
             result = self.handle_api_request(prompt)
-            
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
 
             self.wfile.write(json.dumps(result).encode('utf-8'))
-        
+
         except Exception as e:
             self.send_response(500)
             self.send_header('Content-type', 'text/plain')
