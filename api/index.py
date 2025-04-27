@@ -1,6 +1,7 @@
 import json
 import requests
 from http.server import BaseHTTPRequestHandler
+import base64
 
 class Handler(BaseHTTPRequestHandler):
     
