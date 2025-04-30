@@ -2,7 +2,6 @@ import json
 import base64
 import requests
 from http.server import BaseHTTPRequestHandler
-from payload import construct_payload  # Importing the function from payload.py
 
 class Handler(BaseHTTPRequestHandler):
 
@@ -89,3 +88,23 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
             self.wfile.write(f"Error: {str(e)}".encode('utf-8'))
+
+
+def construct_payload(prompt):
+    """
+    This function constructs the payload for the API request.
+    It takes the user input (prompt) and returns the payload structure.
+    """
+    data = {
+        "contents": [  
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ]
+    }
+    return data
