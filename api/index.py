@@ -97,22 +97,22 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(f"Error: {str(e)}".encode('utf-8'))
 
-
-def construct_payload(prompt):
-    """
-    This function constructs the payload for the API request.
-    It takes the user input (prompt) and returns the payload structure.
-    """
-    data = {
-        "contents": [  
-            {
-                "role": "user",
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ]
-    }
-    return data
+    @staticmethod
+    def construct_payload(prompt):
+        """
+        This function constructs the payload for the API request.
+        It takes the user input (prompt) and returns the payload structure.
+        """
+        data = {
+            "contents": [  
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ]
+        }
+        return data
