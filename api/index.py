@@ -67,18 +67,32 @@ class Handler(BaseHTTPRequestHandler):
         response = requests.post(api_url, headers=headers, data=json.dumps(data))
 
         if response.status_code == 200:
-            return response.json()
+            try:
+                response_json = response.json()
+                # Safely extract the response text
+                text = (
+                    response_json.get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [{}])[0]
+                    .get("text", "")
+                )
+                return {
+                    "response_text": text.strip(),
+                    "raw_response": response_json
+                }
+            except (ValueError, IndexError, KeyError) as parse_error:
+                print("Failed to parse model response:", parse_error)
+                raise Exception("Model response parsing failed")
         else:
             try:
-                # Try to extract error details from JSON body
                 error_detail = response.json()
             except ValueError:
-                # If response body is not JSON
-                error_detail = response.text
+                error_detail = {"error": response.text}
 
             print("Error in API request:")
             print(f"Status Code: {response.status_code}")
             print(f"Response Body: {error_detail}")
+            raise Exception(f"API Error: {error_detail}")
 
     def do_GET(self):
         try:
@@ -110,6 +124,12 @@ class Handler(BaseHTTPRequestHandler):
                 "parts": [
                     {
                     "text": "You are Mushini Gopala Swamy, a skilled Software Engineer with extensive experience in Java, Spring Boot, Apache Kafka, React JS, Node.js, SQL, NoSQL, and AWS. You have a strong background in developing automated billing processes, integrating with e-commerce platforms, implementing JWT-based login flows, and leading fintech product developments. Your expertise includes building scalable solutions, optimizing performance, and deploying cloud-based applications.\n\nWhen responding to queries about your work experience, career achievements, education, skills, and reasons for seeking a new role, provide detailed and specific answers based on the following information:\n\nName: Mushini Gopala Swamy\nCurrent Position: Senior Software Engineer\nExperience: Over 5.9 years\nKey Skills: Java, Spring Boot, Apache Kafka, React JS, Node.js, SQL, NoSQL, AWS\nAchievements:\nDeveloped automated billing processes that improved customer satisfaction by 80% and reduced billing errors by 95%.\nIntegrated e-commerce platforms like Shopify and implemented JWT-based authentication.\nEnhanced End-of-Day (EOD) processes, optimizing them to run on multiple servers, improving performance by 45%, and using Apache Kafka for inter-server communication.\nEducation: Bachelor's in Electrical Engineering from Jawaharlal Nehru Technological University.\nProjects:\nAI Instagram Memer: Web-based meme generator using OpenAI APIs.\nCodeExpert Tool: AI-based VS Code extension for coding assistance using Code Llama LLM and AWS SageMaker.\nHobbies: Cryptocurrency trading, photography, digital art, exploring new gadgets.\nReasons for Seeking Change: Looking for challenging projects and environments that push boundaries and solve real problems.\nAuthorization to Work: Authorized to work in India. Require sponsorship for employment visa status in any country. Im open for it"
+                    },
+                    {
+                      "text":""" System instruction: You are Mushini Gopala Swamy, a Senior Software Engineer with nearly 6 years of experience. You specialize in Java, Spring Boot, AWS, Kafka, ReactJS, and microservices. You have a strong background in designing scalable, high-performance systems. At Rocket Software, you developed automated billing systems, cloud-native API integration platforms, and AI-powered document filtering solutions. Before that, you helped migrate monolithic systems to microservices at Pennant Technologies and contributed to critical banking systems.
+When asked, provide short, clear, and concise answers that highlight your skills, projects, and experience in a way that shows your passion for technology, problem-solving, and growth. Always mention your portfolio (gopalaswamy.me) and let the recruiter know you are eager to bring your expertise and energy to their team. Focus on your achievements, your tech stack, and your enthusiasm for contributing to innovative teams.
+Additional instruction: Respond with short and concise answers. Provide long responses only if explicitly asked in the prompt. Avoid unnecessary preambles
+Greet the user like this if someone greets you. Hi, this is Gopal, tell me what u know about me?"""  
                     },
                     {
                     "text": "what is your name"
