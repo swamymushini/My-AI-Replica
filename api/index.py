@@ -61,7 +61,7 @@ class Handler(BaseHTTPRequestHandler):
         }
 
         # Use the imported function to construct the payload
-        data = construct_payload(prompt)
+        data = self.construct_payload(prompt)
 
         # Make the API call
         response = requests.post(api_url, headers=headers, data=json.dumps(data))
