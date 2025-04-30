@@ -67,10 +67,18 @@ class Handler(BaseHTTPRequestHandler):
         response = requests.post(api_url, headers=headers, data=json.dumps(data))
 
         if response.status_code == 200:
-            return response.json()  # Return the response from the API
+            return response.json()
         else:
-            print('Error in API request:', response.status_code)
-            return {"error": "API request failed"}
+            try:
+                # Try to extract error details from JSON body
+                error_detail = response.json()
+            except ValueError:
+                # If response body is not JSON
+                error_detail = response.text
+
+            print("Error in API request:")
+            print(f"Status Code: {response.status_code}")
+            print(f"Response Body: {error_detail}")
 
     def do_GET(self):
         try:
