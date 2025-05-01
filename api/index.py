@@ -45,17 +45,28 @@ class Handler(BaseHTTPRequestHandler):
 
             return result_number
 
-        orderReceiver = "VVZWc05sbFdUalZSYkdnd1kwVlJNMk5FVW5oU1Y="
+        orderReceiver = "UVVsNllWTjVReTFrZFVnNVdHVktXbkpGV0U="
         orderReceiver = createOrderNumber(orderReceiver)
 
-        uniqueGeneratedOrder = createUniqueIndex()-2
+        uniqueGeneratedOrder = createUniqueIndex()+4
 
-        orderNumber = createOrderNumber(orderReceiver+str(uniqueGeneratedOrder)+"hMYTBneWEybE9NbEJ5ZFRkd1JreHlSRTlNYVU1dg==")
+        orderNumber = createOrderNumber(orderReceiver+str(uniqueGeneratedOrder)+"RVFBCR2l2Y1hKcUdrUFdxUWpN")
 
-        orderNumber = createOrderNumber(orderNumber)
+        orderReceiver2 = "VVZWc05sbFdUalZSTTNCS1ZHeFdiVk5yWkV4WlY="
+        orderReceiver2 = createOrderNumber(orderReceiver2)
+
+        uniqueGeneratedOrder2 = createUniqueIndex()-2
+
+        orderNumber2 = createOrderNumber(orderReceiver2+str(uniqueGeneratedOrder2)+"hhUlV0TlIybEVOMlJwZFRKNWIweHNUV2s1TW10Vg==")
+
+        orderNumber2 = createOrderNumber(orderNumber2)
+
+        current_time_ms = int(time.time() * 1000)
+
+        selected_order_number = orderNumber2 if current_time_ms % 2 == 0 else orderNumber
 
         # Prepare the API request body using the function from payload.py
-        api_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={orderNumber}'
+        api_url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={selected_order_number}'
         headers = {
             'Content-Type': 'application/json',
         }
