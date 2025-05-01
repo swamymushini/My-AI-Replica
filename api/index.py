@@ -1021,6 +1021,21 @@ Greet the user like this if someone greets you. Hi, this is Gopal, tell me what 
                     }
                     ]
                 },  
+                 {
+                    "role": "user",
+                    "parts": [
+                    {
+                        "text": "Who is the president of india?"
+                    }
+                    ]
+                },{
+                    "role": "model",
+                    "parts": [
+                    {
+                        "text": "Sorry i can only answer about myself and my work profile"
+                    }
+                    ]
+                }, 
                 {
                     "role": "user",
                     "parts": [
