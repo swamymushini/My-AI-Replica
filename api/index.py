@@ -1,12 +1,10 @@
 import json
-import base64
 import requests
 import numpy as np
 import time
 import os
 import hashlib
 import pickle
-import urllib.parse
 
 # Load environment variables from .env file if it exists
 def load_env_file():
