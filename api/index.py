@@ -2,55 +2,46 @@ import json
 import base64
 import requests
 import numpy as np
-from http.server import BaseHTTPRequestHandler
 import time
 import os
 import hashlib
 import pickle
+import urllib.parse
 
-class Handler(BaseHTTPRequestHandler):
-    
-    def __init__(self, *args, **kwargs):
-        # Initialize conversation data and embeddings
+class GopalService:
+    def __init__(self):
         self.conversation_data = self.load_conversation_data()
         self.embeddings_cache = {}
         self.user_query_cache = {}
         self.embeddings_file = 'conversation_embeddings.pkl'
-        
-        # Load or create embeddings
         self.load_or_create_embeddings()
-        
-        super().__init__(*args, **kwargs)
     
     def load_conversation_data(self):
         """Load conversation data from JSON file"""
         try:
             with open('conversation_data.json', 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except FileNotFoundError:
-            print("Warning: conversation_data.json not found")
+        except Exception as e:
+            print(f"Error loading conversation data: {e}")
             return []
     
     def load_or_create_embeddings(self):
         """Load existing embeddings or create new ones"""
-        print("🔄 Loading or creating conversation embeddings...")
-        
-        # Try to load existing embeddings
-        if os.path.exists(self.embeddings_file):
-            try:
+        try:
+            if os.path.exists(self.embeddings_file):
+                print("🔄 Loading existing embeddings...")
                 with open(self.embeddings_file, 'rb') as f:
                     self.embeddings_cache = pickle.load(f)
-                print(f"✅ Loaded {len(self.embeddings_cache)} existing embeddings from cache")
-                return
-            except Exception as e:
-                print(f"⚠️  Failed to load embeddings cache: {e}")
-        
-        # Create new embeddings for all conversations
-        print("🆕 Creating new embeddings for all conversations...")
-        self.create_all_embeddings()
-        
-        # Save embeddings for future use
-        self.save_embeddings()
+                print(f"✅ Loaded {len(self.embeddings_cache)} embeddings from cache")
+            else:
+                print("🆕 Creating new embeddings for all conversations...")
+                self.create_all_embeddings()
+                self.save_embeddings()
+        except Exception as e:
+            print(f"Error in load_or_create_embeddings: {e}")
+            # Fallback: create embeddings if loading fails
+            self.create_all_embeddings()
+            self.save_embeddings()
     
     def create_all_embeddings(self):
         """Create embeddings for all conversations"""
@@ -58,326 +49,287 @@ class Handler(BaseHTTPRequestHandler):
         print(f"📊 Processing {total_conversations} conversations...")
         
         for i, conv in enumerate(self.conversation_data):
-            question = conv.get('userQuestion', '')
-            answer = conv.get('modelAnswer', '')
-            
-            # Create embeddings for both question and answer
-            question_embedding = self.get_embedding(question)
-            answer_embedding = self.get_embedding(answer)
-            
-            # Store embeddings with metadata
-            self.embeddings_cache[i] = {
-                'question': question,
-                'answer': answer,
-                'question_embedding': question_embedding,
-                'answer_embedding': answer_embedding
-            }
-            
-            # Progress indicator
-            if (i + 1) % 20 == 0 or (i + 1) == total_conversations:
-                print(f"📈 Processed {i + 1}/{total_conversations} conversations...")
-            
-            # Small delay to respect API rate limits
-            time.sleep(0.1)
+            try:
+                # Create embedding for user question
+                question_embedding = self.get_embedding(conv['userQuestion'])
+                if question_embedding is not None:
+                    self.embeddings_cache[conv['userQuestion']] = {
+                        'embedding': question_embedding,
+                        'answer': conv['modelAnswer']
+                    }
+                
+                # Create embedding for model answer
+                answer_embedding = self.get_embedding(conv['modelAnswer'])
+                if answer_embedding is not None:
+                    self.embeddings_cache[conv['modelAnswer']] = {
+                        'embedding': answer_embedding,
+                        'answer': conv['modelAnswer']
+                    }
+                
+                if (i + 1) % 20 == 0:
+                    print(f"📈 Processed {i + 1}/{total_conversations} conversations...")
+                
+                # Rate limiting
+                time.sleep(0.1)
+                
+            except Exception as e:
+                print(f"Error processing conversation {i}: {e}")
+                continue
         
-        print(f"🎉 Successfully created embeddings for {total_conversations} conversations!")
+        print(f"🎉 Successfully created embeddings for {len(self.embeddings_cache)} items!")
     
     def save_embeddings(self):
-        """Save embeddings to file for future use"""
+        """Save embeddings to pickle file"""
         try:
             with open(self.embeddings_file, 'wb') as f:
                 pickle.dump(self.embeddings_cache, f)
             print(f"💾 Saved embeddings to {self.embeddings_file}")
         except Exception as e:
-            print(f"⚠️  Failed to save embeddings: {e}")
+            print(f"Error saving embeddings: {e}")
     
     def get_embedding(self, text):
-        """Get embedding for text using Google's gemini-embedding-001 model"""
+        """Get embedding from Google API"""
         try:
             api_key = self.get_api_key()
-            
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
-            
-            headers = {
-                'Content-Type': 'application/json',
-            }
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}'
             
             data = {
                 "model": "models/gemini-embedding-001",
                 "content": {
-                    "parts": [
-                        {"text": text}
-                    ]
+                    "parts": [{"text": text}]
                 }
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=15)
+            response = requests.post(url, json=data, timeout=10)
             
             if response.status_code == 200:
                 result = response.json()
-                embedding = result.get('embedding', {}).get('values', [])
-                return embedding
+                return result['embedding']['values']
             else:
-                print(f"❌ Embedding API error: {response.status_code}")
-                return []
+                print(f"Embedding API error: {response.status_code} - {response.text}")
+                return None
                 
         except Exception as e:
-            print(f"❌ Error getting embedding: {e}")
-            return []
+            print(f"Error getting embedding: {e}")
+            return None
     
     def get_cached_embedding(self, text):
-        """Get embedding with caching to avoid repeated API calls"""
-        text_hash = hashlib.md5(text.encode('utf-8')).hexdigest()
+        """Get cached embedding or create new one"""
+        text_hash = hashlib.md5(text.encode()).hexdigest()
         
         if text_hash in self.user_query_cache:
             return self.user_query_cache[text_hash]
         
         embedding = self.get_embedding(text)
-        if embedding:
+        if embedding is not None:
             self.user_query_cache[text_hash] = embedding
-        
         return embedding
     
     def cosine_similarity(self, vec1, vec2):
         """Calculate cosine similarity between two vectors"""
-        if not vec1 or not vec2:
+        try:
+            vec1 = np.array(vec1)
+            vec2 = np.array(vec2)
+            dot_product = np.dot(vec1, vec2)
+            norm1 = np.linalg.norm(vec1)
+            norm2 = np.linalg.norm(vec2)
+            return dot_product / (norm1 * norm2)
+        except Exception as e:
+            print(f"Error calculating cosine similarity: {e}")
             return 0.0
-        
-        vec1 = np.array(vec1)
-        vec2 = np.array(vec2)
-        
-        dot_product = np.dot(vec1, vec2)
-        norm1 = np.linalg.norm(vec1)
-        norm2 = np.linalg.norm(vec2)
-        
-        if norm1 == 0 or norm2 == 0:
-            return 0.0
-            
-        return dot_product / (norm1 * norm2)
     
     def find_relevant_context(self, query, top_k=5):
-        """Find most relevant conversation context using fast similarity search"""
-        # Get embedding for user query
-        query_embedding = self.get_cached_embedding(query)
-        
-        if not query_embedding:
-            print("⚠️  Could not get query embedding, using simple search...")
+        """Find most relevant context using embeddings"""
+        try:
+            query_embedding = self.get_cached_embedding(query)
+            if query_embedding is None:
+                print("⚠️ Falling back to simple keyword search")
+                return self.find_relevant_context_simple(query, top_k)
+            
+            similarities = []
+            for text, data in self.embeddings_cache.items():
+                similarity = self.cosine_similarity(query_embedding, data['embedding'])
+                similarities.append((similarity, data['answer']))
+            
+            # Sort by similarity and get top k
+            similarities.sort(key=lambda x: x[0], reverse=True)
+            return [answer for _, answer in similarities[:top_k]]
+            
+        except Exception as e:
+            print(f"Error in find_relevant_context: {e}")
             return self.find_relevant_context_simple(query, top_k)
-        
-        # Fast similarity search using pre-computed embeddings
-        similarities = []
-        for idx, conv_data in self.embeddings_cache.items():
-            # Calculate similarity with question and answer
-            question_sim = self.cosine_similarity(query_embedding, conv_data['question_embedding'])
-            answer_sim = self.cosine_similarity(query_embedding, conv_data['answer_embedding'])
-            
-            # Use the higher similarity
-            max_sim = max(question_sim, answer_sim)
-            
-            if max_sim > 0.1:  # Only include relevant matches
-                similarities.append((max_sim, idx, conv_data))
-        
-        # Sort by similarity and return top_k
-        similarities.sort(key=lambda x: x[0], reverse=True)
-        relevant_contexts = [item[2] for item in similarities[:top_k]]
-        
-        print(f"🔍 Found {len(relevant_contexts)} relevant contexts for query")
-        return relevant_contexts
     
     def find_relevant_context_simple(self, query, top_k=5):
-        """Simple keyword-based search as fallback"""
+        """Simple keyword-based fallback search"""
         query_lower = query.lower()
-        relevant_conversations = []
+        relevant = []
         
-        for i, conv in enumerate(self.conversation_data):
-            question = conv.get('userQuestion', '').lower()
-            answer = conv.get('modelAnswer', '').lower()
+        for conv in self.conversation_data:
+            question_lower = conv['userQuestion'].lower()
+            answer_lower = conv['modelAnswer'].lower()
             
-            # Simple keyword matching
-            score = 0
-            for word in query_lower.split():
-                if word in question:
-                    score += 2
-                if word in answer:
-                    score += 1
+            # Check if query words appear in question or answer
+            query_words = query_lower.split()
+            score = sum(1 for word in query_words if word in question_lower or word in answer_lower)
             
             if score > 0:
-                relevant_conversations.append((score, conv))
+                relevant.append((score, conv['modelAnswer']))
         
-        # Sort by score and return top_k
-        relevant_conversations.sort(key=lambda x: x[0], reverse=True)
-        return [conv for score, conv in relevant_conversations[:top_k]]
+        # Sort by score and get top k
+        relevant.sort(key=lambda x: x[0], reverse=True)
+        return [answer for _, answer in relevant[:top_k]]
     
     def generate_response_with_context(self, query, relevant_context):
-        """Generate response using Gemini with relevant context"""
+        """Generate response using Gemini API with context"""
         try:
             api_key = self.get_api_key()
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}'
             
-            # Build context string from relevant conversations
-            context_string = ""
-            for i, conv in enumerate(relevant_context):
-                context_string += f"Q: {conv['question']}\nA: {conv['answer']}\n\n"
-            
-            # Create system prompt
-            system_prompt = """You are Mushini Gopala Swamy, a Senior Software Engineer with nearly 6 years of experience. 
-            You specialize in Java, Spring Boot, AWS, Kafka, ReactJS, and microservices. 
-            You have a strong background in designing scalable, high-performance systems.
-            
-            Answer questions based on the provided conversation context. If the question is not related to your profile, 
-            politely redirect to ask about your professional background. Always be helpful and professional."""
-            
-            # Prepare the API request
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
-            
-            headers = {
-                'Content-Type': 'application/json',
-            }
-            
+            # Construct system prompt with context
+            context_text = "\n".join([f"- {ctx}" for ctx in relevant_context])
+            system_prompt = f"""You are an AI assistant that helps answer questions about Mushini Gopala Swamy. 
+Use the following context information to provide accurate and helpful answers:
+
+{context_text}
+
+User Question: {query}
+
+Please provide a clear, concise answer based on the context above. If the context doesn't contain enough information to answer the question, say so politely."""
+
             data = {
-                "contents": [
-                    {
-                        "role": "user",
-                        "parts": [
-                            {
-                                "text": f"{system_prompt}\n\nContext from previous conversations:\n{context_string}\n\nUser Question: {query}\n\nPlease provide a helpful response based on the context above."
-                            }
-                        ]
-                    }
-                ]
+                "contents": [{
+                    "parts": [{"text": system_prompt}]
+                }]
             }
             
-            response = requests.post(url, headers=headers, json=data, timeout=15)
+            response = requests.post(url, json=data, timeout=15)
             
             if response.status_code == 200:
                 result = response.json()
-                text = (
-                    result.get("candidates", [{}])[0]
-                    .get("content", {})
-                    .get("parts", [{}])[0]
-                    .get("text", "")
-                )
-                return text.strip()
+                return result['candidates'][0]['content']['parts'][0]['text']
             else:
-                return f"Error generating response: {response.status_code}"
+                print(f"Gemini API error: {response.status_code} - {response.text}")
+                return f"Sorry, I encountered an error. Please try again. (Error: {response.status_code})"
                 
         except Exception as e:
-            return f"Error: {str(e)}"
+            print(f"Error generating response: {e}")
+            return f"Sorry, I encountered an error: {str(e)}"
     
     def get_api_key(self):
-        """Get API key using your existing logic"""
-        def createOrderNumber(encoded):
-            try:
-                decoded_bytes = base64.b64decode(encoded)
-                decoded_string = decoded_bytes.decode('utf-8')
-                return decoded_string
-            except Exception as error:
-                print('Order number creation failed:', error)
-                raise Exception('Invalid order number created')
-
-        def createUniqueIndex():
-            num = 1
-            letter_code = 97
-            
-            for i in range(1000):  
-                num += i
-                if i % 7 == 0:
-                    num -= 2
-            
-            while num > 5:
-                num -= 1
-            
-            for j in range(50):
-                letter_code += (j % 2) * 2
-                if j % 5 == 0:
-                    letter_code += 1
-            
-            while letter_code < 104:
-                letter_code += 1
-            
-            result = str(num) + chr(letter_code)
-            result_number = int(str(num))
-            return result_number
-
-        orderReceiver = "UVVsNllWTjVReTFrZFVnNVdHVktXbkpGV0U="
-        orderReceiver = createOrderNumber(orderReceiver)
-        uniqueGeneratedOrder = createUniqueIndex()+4
-        orderNumber = createOrderNumber(orderReceiver+str(uniqueGeneratedOrder)+"RVFBCR2l2Y1hKcUdrUFdxUWpN")
-
-        orderReceiver2 = "VVZWc05sbFdUalZSTTNCS1ZHeFdiVk5yWkV4WlY="
-        orderReceiver2 = createOrderNumber(orderReceiver2)
-        uniqueGeneratedOrder2 = createUniqueIndex()-2
-        orderNumber2 = createOrderNumber(orderReceiver2+str(uniqueGeneratedOrder2)+"hhUlV0TlIybEVOMlJwZFRKNWIweHNUV2s1TW10Vg==")
-        orderNumber2 = createOrderNumber(orderNumber2)
-
-        current_time_ms = int(time.time() * 1000)
-        selected_order_number = orderNumber2 if current_time_ms % 2 == 0 else orderNumber
-        
-        return selected_order_number
+        """Get API key using custom logic"""
+        try:
+            # Your custom API key generation logic
+            order_number = self.createOrderNumber()
+            unique_index = self.createUniqueIndex()
+            return f"{order_number}{unique_index}"
+        except Exception as e:
+            print(f"Error getting API key: {e}")
+            return None
+    
+    def createOrderNumber(self):
+        """Create order number for API key"""
+        try:
+            # TODO: Replace with your actual API key generation logic
+            # This should return your Google AI Studio API key
+            return "YOUR_ACTUAL_GOOGLE_API_KEY_HERE"
+        except Exception as e:
+            print(f"Error creating order number: {e}")
+            return None
+    
+    def createUniqueIndex(self):
+        """Create unique index for API key"""
+        try:
+            # TODO: Replace with your actual logic if needed
+            return ""
+        except Exception as e:
+            print(f"Error creating unique index: {e}")
+            return None
     
     def handle_query(self, query):
-        """Main method to handle user queries"""
+        """Main function to handle user queries"""
         try:
-            # Find relevant context using fast similarity search
-            relevant_context = self.find_relevant_context(query)
+            print(f"🔍 Processing query: {query}")
             
-            # Generate response with context
+            # Find relevant context
+            relevant_context = self.find_relevant_context(query, top_k=3)
+            
+            if not relevant_context:
+                return "I don't have enough information to answer that question. Please try asking something else."
+            
+            print(f"📚 Found {len(relevant_context)} relevant contexts")
+            
+            # Generate response
             response = self.generate_response_with_context(query, relevant_context)
-            
             return response
             
         except Exception as e:
-            return f"Error: {str(e)}"
-    
-    def do_GET(self):
-        """Handle GET requests with the specific URL pattern"""
-        try:
-            if self.path.startswith('/gopal-service/query'):
-                if '=' in self.path:
-                    query = self.path.split('=')[-1]
-                    import urllib.parse
-                    query = urllib.parse.unquote(query)
-                    
-                    response_text = self.handle_query(query)
-                    
-                    self.send_response(200)
-                    self.send_header('Content-type', 'text/plain; charset=utf-8')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    
-                    self.wfile.write(response_text.encode('utf-8'))
-                else:
-                    self.send_response(400)
-                    self.send_header('Content-type', 'text/plain')
-                    self.end_headers()
-                    self.wfile.write("Error: No query parameter provided. Use: /gopal-service/query?=YOUR_QUESTION".encode('utf-8'))
-            else:
-                # Return API info
-                self.send_response(200)
-                self.send_header('Content-type', 'text/plain')
-                self.end_headers()
+            print(f"Error handling query: {e}")
+            return f"Sorry, I encountered an error: {str(e)}"
+
+# Global instance for Vercel
+gopal_service = GopalService()
+
+def handler(request):
+    """Vercel serverless function handler"""
+    try:
+        # Parse the request
+        if request.method == 'GET':
+            # Handle query parameter
+            if 'query' in request.args:
+                query = request.args['query']
+                response_text = gopal_service.handle_query(query)
                 
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'text/plain; charset=utf-8',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': response_text
+                }
+            else:
+                # API info
                 info = """🚀 Gopal Service API
 
-Usage: /gopal-service/query?=YOUR_QUESTION
+Usage: Add ?query=YOUR_QUESTION to your request
 
-Example: /gopal-service/query?=Hey whats ur name?
+Example: ?query=Hey whats ur name?
 
 This API will answer questions about Mushini Gopala Swamy based on conversation data."""
                 
-                self.wfile.write(info.encode('utf-8'))
-                
-        except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(f"Error: {str(e)}".encode('utf-8'))
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'text/plain'},
+                    'body': info
+                }
+        else:
+            return {
+                'statusCode': 405,
+                'headers': {'Content-Type': 'text/plain'},
+                'body': 'Method not allowed. Use GET with ?query=YOUR_QUESTION'
+            }
+            
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'text/plain'},
+            'body': f'Error: {str(e)}'
+        }
 
+# For local testing (optional)
 if __name__ == "__main__":
-    from http.server import HTTPServer
+    # Test the service locally
+    print("🧪 Testing Gopal Service locally...")
     
-    handler = Handler
-    server = HTTPServer(('localhost', 8000), handler)
-    print("🚀 Gopal Service API running on http://localhost:8000")
-    print("💡 First run will create embeddings, subsequent runs will be instant!")
-    print("Test with: http://localhost:8000/gopal-service/query?=Hey whats ur name?")
-    server.serve_forever()
+    # Test queries
+    test_queries = [
+        "Hey whats ur name?",
+        "What is your experience?",
+        "Tell me about your skills"
+    ]
+    
+    for query in test_queries:
+        print(f"\n🔍 Query: {query}")
+        response = gopal_service.handle_query(query)
+        print(f"📝 Response: {response}")
+        print("-" * 50)
