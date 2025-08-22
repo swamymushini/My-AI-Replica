@@ -5,6 +5,7 @@ import time
 import os
 import hashlib
 import pickle
+from http.server import BaseHTTPRequestHandler
 
 # Load environment variables from .env file if it exists
 def load_env_file():
@@ -258,24 +259,34 @@ Please provide a clear, concise answer based on the context above. If the contex
 # Global instance for Vercel
 gopal_service = GopalService()
 
-def handler(request):
-    """Vercel serverless function handler"""
-    try:
-        # Parse the request
-        if request.method == 'GET':
-            # Handle query parameter
-            if 'query' in request.args:
-                query = request.args['query']
-                response_text = gopal_service.handle_query(query)
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        try:
+            # Parse query parameters
+            if '?' in self.path:
+                path, query_string = self.path.split('?', 1)
+                query_params = {}
+                for param in query_string.split('&'):
+                    if '=' in param:
+                        key, value = param.split('=', 1)
+                        query_params[key] = value
                 
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                        'Content-Type': 'text/plain; charset=utf-8',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    'body': response_text
-                }
+                # Handle query parameter
+                if 'query' in query_params:
+                    import urllib.parse
+                    query = urllib.parse.unquote(query_params['query'])
+                    response_text = gopal_service.handle_query(query)
+                    
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/plain; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(response_text.encode('utf-8'))
+                else:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'text/plain')
+                    self.end_headers()
+                    self.wfile.write("Error: No query parameter provided. Use: ?query=YOUR_QUESTION".encode('utf-8'))
             else:
                 # API info
                 info = """🚀 Gopal Service API
@@ -286,24 +297,24 @@ Example: ?query=Hey whats ur name?
 
 This API will answer questions about Mushini Gopala Swamy based on conversation data."""
                 
-                return {
-                    'statusCode': 200,
-                    'headers': {'Content-Type': 'text/plain'},
-                    'body': info
-                }
-        else:
-            return {
-                'statusCode': 405,
-                'headers': {'Content-Type': 'text/plain'},
-                'body': 'Method not allowed. Use GET with ?query=YOUR_QUESTION'
-            }
-            
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {'Content-Type': 'text/plain'},
-            'body': f'Error: {str(e)}'
-        }
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(info.encode('utf-8'))
+                
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(f"Error: {str(e)}".encode('utf-8'))
+    
+    def do_OPTIONS(self):
+        """Handle CORS preflight request"""
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
 
 # For local testing (optional)
 if __name__ == "__main__":
