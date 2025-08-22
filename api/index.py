@@ -8,6 +8,20 @@ import hashlib
 import pickle
 import urllib.parse
 
+# Load environment variables from .env file if it exists
+def load_env_file():
+    try:
+        with open('.env', 'r') as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    os.environ[key] = value
+    except FileNotFoundError:
+        pass  # .env file doesn't exist, use system environment variables
+
+# Load environment variables
+load_env_file()
+
 class GopalService:
     def __init__(self):
         self.conversation_data = self.load_conversation_data()
@@ -216,34 +230,11 @@ Please provide a clear, concise answer based on the context above. If the contex
             return f"Sorry, I encountered an error: {str(e)}"
     
     def get_api_key(self):
-        """Get API key using custom logic"""
-        try:
-            # Your custom API key generation logic
-            order_number = self.createOrderNumber()
-            unique_index = self.createUniqueIndex()
-            return f"{order_number}{unique_index}"
-        except Exception as e:
-            print(f"Error getting API key: {e}")
-            return None
-    
-    def createOrderNumber(self):
-        """Create order number for API key"""
-        try:
-            # TODO: Replace with your actual API key generation logic
-            # This should return your Google AI Studio API key
-            return "YOUR_ACTUAL_GOOGLE_API_KEY_HERE"
-        except Exception as e:
-            print(f"Error creating order number: {e}")
-            return None
-    
-    def createUniqueIndex(self):
-        """Create unique index for API key"""
-        try:
-            # TODO: Replace with your actual logic if needed
-            return ""
-        except Exception as e:
-            print(f"Error creating unique index: {e}")
-            return None
+        """Get API key from environment variable"""
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if not api_key:
+            raise Exception("GOOGLE_API_KEY environment variable not set")
+        return api_key
     
     def handle_query(self, query):
         """Main function to handle user queries"""
