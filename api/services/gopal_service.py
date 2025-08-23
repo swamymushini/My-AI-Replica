@@ -97,7 +97,7 @@ class GopalService:
                         array_text = f"{key.replace('_', ' ').title()}: {', '.join(str(item) for item in value)}"
                         print(f"   📝 Created generic array chunk: {array_text[:50]}...")
                         chunks.append(array_text)
-            else:
+            elif isinstance(value, (str, int, float)):
                 print(f"   ⚠️ Unhandled field type: {key} = {value}")
         
         return chunks
