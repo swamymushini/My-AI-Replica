@@ -1,5 +1,5 @@
 import requests
-from config.env_loader import get_api_key
+from api.config.env_loader import get_api_key
 
 class GeminiAPI:
     @staticmethod

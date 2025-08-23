@@ -3,7 +3,7 @@ import hashlib
 import pickle
 import os
 import time
-from config.env_loader import get_api_key
+from api.config.env_loader import get_api_key
 
 class EmbeddingManager:
     def __init__(self, embeddings_file='cache/conversation_embeddings.pkl'):

@@ -1,6 +1,6 @@
 import urllib.parse
 from http.server import BaseHTTPRequestHandler
-from services.gopal_service import GopalService
+from api.services.gopal_service import GopalService
 
 class APIHandler(BaseHTTPRequestHandler):
     def do_GET(self):

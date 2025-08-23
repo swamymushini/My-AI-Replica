@@ -1,7 +1,7 @@
 import json
-from utils.embedding_utils import EmbeddingManager
-from utils.search_utils import SearchUtils
-from utils.api_utils import GeminiAPI
+from api.utils.embedding_utils import EmbeddingManager
+from api.utils.search_utils import SearchUtils
+from api.utils.api_utils import GeminiAPI
 
 class GopalService:
     def __init__(self):
