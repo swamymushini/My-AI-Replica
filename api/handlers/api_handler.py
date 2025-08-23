@@ -38,9 +38,9 @@ class APIHandler(BaseHTTPRequestHandler):
 
 Usage: Add ?query=YOUR_QUESTION to your request
 
-Example: ?query=Hey whats ur name?
+Example: ?query=What is your experience?
 
-This API will answer questions about Mushini Gopala Swamy based on conversation data."""
+This bot will answer questions as if you are Mushini Gopala Swamy responding to recruiters."""
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'text/plain')

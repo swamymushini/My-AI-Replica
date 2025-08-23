@@ -1,15 +1,15 @@
-# 🤖 My AI Replica - Intelligent Q&A API
+# 🤖 My AI Replica - Intelligent Job Application Bot
 
-A sophisticated AI-powered Q&A system that answers questions about **Mushini Gopala Swamy** using Retrieval-Augmented Generation (RAG) with Google's Gemini AI and embeddings.
+A sophisticated AI-powered bot that **acts as Mushini Gopala Swamy** to answer recruiter questions using Retrieval-Augmented Generation (RAG) with Google's Gemini AI and embeddings.
 
 ## 🚀 What It Does
 
-This API creates an intelligent AI replica that can answer questions about a specific person by:
+This bot creates an intelligent AI replica that **acts as Mushini Gopala Swamy** to answer recruiter questions by:
 
-1. **📚 Knowledge Base**: Uses `conversation_data.json` containing 227+ Q&A pairs
-2. **🧠 Smart Search**: Creates embeddings for semantic similarity search
-3. **🔍 Context Retrieval**: Finds most relevant conversations for each question
-4. **💬 AI Generation**: Uses Google Gemini 2.0 Flash to generate contextual responses
+1. **📚 Knowledge Base**: Uses `myprofile.json` containing comprehensive profile information
+2. **🧠 Smart Search**: Creates embeddings for semantic similarity search across profile data
+3. **🔍 Context Retrieval**: Finds most relevant profile sections for each question
+4. **💬 AI Generation**: Uses Google Gemini 2.0 Flash to generate responses as if you are Gopal
 5. **⚡ Performance**: Caches embeddings for instant responses after first run
 
 ## 🏗️ Architecture
@@ -68,30 +68,23 @@ The project now has a clean data structure:
 ```
 My-AI-Replica/
 ├── api/
-│   ├── __init__.py                 # Package initialization
 │   ├── index.py                    # Main entry point (simplified)
 │   ├── config/
-│   │   ├── __init__.py            # Config package
 │   │   └── env_loader.py          # Environment configuration
 │   ├── utils/
-│   │   ├── __init__.py            # Utils package
 │   │   ├── embedding_utils.py     # Embedding management
 │   │   ├── search_utils.py        # Search and similarity
 │   │   └── api_utils.py           # Gemini API interactions
 │   ├── services/
-│   │   ├── __init__.py            # Services package
 │   │   └── gopal_service.py       # Main business logic
 │   └── handlers/
-│       ├── __init__.py            # Handlers package
 │       └── api_handler.py         # HTTP request handling
 ├── data/
-│   ├── __init__.py                # Data package
-│   ├── conversation_data.json     # Knowledge base (227 Q&A pairs)
-│   ├── email_data.json            # Email templates and responses
-│   └── myprofile.json             # Personal profile information
+│   ├── myprofile.json             # Comprehensive profile information
+│   ├── conversation_data.json     # Q&A conversation data
+│   └── email_data.json            # Email templates and responses
 ├── cache/
-│   ├── __init__.py                # Cache package
-│   └── conversation_embeddings.pkl # Cached embeddings (auto-generated)
+│   └── profile_embeddings.pkl     # Cached profile embeddings (auto-generated)
 ├── requirements.txt               # Python dependencies
 ├── .gitignore                    # Git ignore rules
 └── README.md                     # This file

@@ -27,33 +27,32 @@ class SearchUtils:
             similarities = []
             for text, data in embeddings_cache.items():
                 similarity = SearchUtils.cosine_similarity(query_embedding, data['embedding'])
-                similarities.append((similarity, data['answer']))
+                similarities.append((similarity, data['content']))
             
             # Sort by similarity and get top k
             similarities.sort(key=lambda x: x[0], reverse=True)
-            return [answer for _, answer in similarities[:top_k]]
+            return [content for _, content in similarities[:top_k]]
             
         except Exception as e:
             print(f"Error in find_relevant_context: {e}")
             return None  # Signal to use fallback search
     
     @staticmethod
-    def find_relevant_context_simple(query, conversation_data, top_k=5):
-        """Simple keyword-based fallback search"""
+    def find_relevant_context_simple(query, profile_data, top_k=5):
+        """Simple keyword-based fallback search for profile data"""
         query_lower = query.lower()
         relevant = []
         
-        for conv in conversation_data:
-            question_lower = conv['userQuestion'].lower()
-            answer_lower = conv['modelAnswer'].lower()
+        for chunk in profile_data:
+            chunk_lower = chunk.lower()
             
-            # Check if query words appear in question or answer
+            # Check if query words appear in profile chunk
             query_words = query_lower.split()
-            score = sum(1 for word in query_words if word in question_lower or word in answer_lower)
+            score = sum(1 for word in query_words if word in chunk_lower)
             
             if score > 0:
-                relevant.append((score, conv['modelAnswer']))
+                relevant.append((score, chunk))
         
         # Sort by score and get top k
         relevant.sort(key=lambda x: x[0], reverse=True)
-        return [answer for _, answer in relevant[:top_k]]
+        return [chunk for _, chunk in relevant[:top_k]]

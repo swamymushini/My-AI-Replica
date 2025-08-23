@@ -6,63 +6,55 @@ import time
 from api.config.env_loader import get_api_key
 
 class EmbeddingManager:
-    def __init__(self, embeddings_file='cache/conversation_embeddings.pkl'):
+    def __init__(self, embeddings_file='cache/profile_embeddings.pkl'):
         self.embeddings_file = embeddings_file
         self.embeddings_cache = {}
         self.user_query_cache = {}
     
-    def load_or_create_embeddings(self, conversation_data):
+    def load_or_create_embeddings(self, profile_data):
         """Load existing embeddings or create new ones"""
         try:
             if os.path.exists(self.embeddings_file):
-                print("🔄 Loading existing embeddings...")
+                print("🔄 Loading existing profile embeddings...")
                 with open(self.embeddings_file, 'rb') as f:
                     self.embeddings_cache = pickle.load(f)
-                print(f"✅ Loaded {len(self.embeddings_cache)} embeddings from cache")
+                print(f"✅ Loaded {len(self.embeddings_cache)} profile embeddings from cache")
             else:
-                print("🆕 Creating new embeddings for all conversations...")
-                self.create_all_embeddings(conversation_data)
+                print("🆕 Creating new embeddings for profile data...")
+                self.create_all_embeddings(profile_data)
                 self.save_embeddings()
         except Exception as e:
             print(f"Error in load_or_create_embeddings: {e}")
             # Fallback: create embeddings if loading fails
-            self.create_all_embeddings(conversation_data)
+            self.create_all_embeddings(profile_data)
             self.save_embeddings()
     
-    def create_all_embeddings(self, conversation_data):
-        """Create embeddings for all conversations"""
-        total_conversations = len(conversation_data)
-        print(f"📊 Processing {total_conversations} conversations...")
+    def create_all_embeddings(self, profile_data):
+        """Create embeddings for all profile data chunks"""
+        total_chunks = len(profile_data)
+        print(f"📊 Processing {total_chunks} profile chunks...")
         
-        for i, conv in enumerate(conversation_data):
+        for i, chunk in enumerate(profile_data):
             try:
-                # Create embedding for user question
-                question_embedding = self.get_embedding(conv['userQuestion'])
-                if question_embedding is not None:
-                    self.embeddings_cache[conv['userQuestion']] = {
-                        'embedding': question_embedding,
-                        'answer': conv['modelAnswer']
+                # Create embedding for each profile chunk
+                chunk_embedding = self.get_embedding(chunk)
+                if chunk_embedding is not None:
+                    self.embeddings_cache[chunk] = {
+                        'embedding': chunk_embedding,
+                        'content': chunk
                     }
                 
-                # Create embedding for model answer
-                answer_embedding = self.get_embedding(conv['modelAnswer'])
-                if answer_embedding is not None:
-                    self.embeddings_cache[conv['modelAnswer']] = {
-                        'embedding': answer_embedding,
-                        'answer': conv['modelAnswer']
-                    }
-                
-                if (i + 1) % 20 == 0:
-                    print(f"📈 Processed {i + 1}/{total_conversations} conversations...")
+                if (i + 1) % 5 == 0:
+                    print(f"📈 Processed {i + 1}/{total_chunks} profile chunks...")
                 
                 # Rate limiting
                 time.sleep(0.1)
                 
             except Exception as e:
-                print(f"Error processing conversation {i}: {e}")
+                print(f"Error processing profile chunk {i}: {e}")
                 continue
         
-        print(f"🎉 Successfully created embeddings for {len(self.embeddings_cache)} items!")
+        print(f"🎉 Successfully created embeddings for {len(self.embeddings_cache)} profile chunks!")
     
     def save_embeddings(self):
         """Save embeddings to pickle file"""
@@ -71,7 +63,7 @@ class EmbeddingManager:
             os.makedirs(os.path.dirname(self.embeddings_file), exist_ok=True)
             with open(self.embeddings_file, 'wb') as f:
                 pickle.dump(self.embeddings_cache, f)
-            print(f"💾 Saved embeddings to {self.embeddings_file}")
+            print(f"💾 Saved profile embeddings to {self.embeddings_file}")
         except Exception as e:
             print(f"Error saving embeddings: {e}")
     
