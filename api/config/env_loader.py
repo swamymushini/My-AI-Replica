@@ -25,10 +25,17 @@ def get_perplexity_api_key():
         raise Exception("PERPLEXITY_API_KEY environment variable not set")
     return api_key
 
+def get_groq_api_key():
+    """Get Groq API key from environment variable"""
+    api_key = os.getenv('GROQ_API_KEY')
+    if not api_key:
+        raise Exception("GROQ_API_KEY environment variable not set")
+    return api_key
+
 def get_selected_model():
     """Get the selected AI model from environment variable"""
     model = os.getenv('MODEL', 'GEMINI').upper()
-    if model not in ['GEMINI', 'PERPLEXITY']:
+    if model not in ['GEMINI', 'PERPLEXITY', 'GROQ']:
         print(f"⚠️ Invalid MODEL value: {model}. Defaulting to GEMINI")
         model = 'GEMINI'
     return model

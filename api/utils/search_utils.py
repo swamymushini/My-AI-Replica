@@ -1,4 +1,6 @@
 import numpy as np
+import json
+import os
 
 class SearchUtils:
     @staticmethod
@@ -38,6 +40,140 @@ class SearchUtils:
             return None  # Signal to use fallback search
     
     @staticmethod
+    def _extract_all_fields_from_profile(profile_data):
+        """Extract all available fields from profile data dynamically"""
+        all_fields = {}
+        
+        def extract_fields_recursive(data, prefix=""):
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    current_key = f"{prefix}.{key}" if prefix else key
+                    if isinstance(value, (str, int, float, bool)):
+                        # Simple field
+                        all_fields[current_key] = {
+                            'type': 'simple',
+                            'value': str(value),
+                            'keywords': [key, str(value).lower()]
+                        }
+                    elif isinstance(value, list):
+                        # Array field
+                        all_fields[current_key] = {
+                            'type': 'array',
+                            'value': value,
+                            'keywords': [key] + [str(item).lower() for item in value if item]
+                        }
+                    elif isinstance(value, dict):
+                        # Nested object
+                        all_fields[current_key] = {
+                            'type': 'nested',
+                            'value': value,
+                            'keywords': [key]
+                        }
+                        extract_fields_recursive(value, current_key)
+        
+        extract_fields_recursive(profile_data)
+        return all_fields
+    
+    @staticmethod
+    def _generate_semantic_keywords_for_field(field_name, field_value, field_type):
+        """Generate semantic keywords for a field using AI or rule-based approach"""
+        semantic_keywords = []
+        
+        # Base keywords from field name
+        field_words = field_name.replace('_', ' ').lower().split()
+        semantic_keywords.extend(field_words)
+        
+        # Add common synonyms based on field type and content
+        if field_type == 'array':
+            semantic_keywords.extend(['list', 'items', 'collection'])
+        elif field_type == 'nested':
+            semantic_keywords.extend(['details', 'information', 'data'])
+        
+        # Add common question words
+        question_words = ['what', 'tell me about', 'describe', 'explain', 'show']
+        semantic_keywords.extend(question_words)
+        
+        # Add field-specific semantic mappings
+        semantic_mappings = {
+            'hobbies': ['interests', 'passions', 'likes', 'enjoy', 'fun', 'leisure', 'activities'],
+            'skills': ['expertise', 'capabilities', 'proficiencies', 'technologies', 'tools'],
+            'experience': ['work history', 'career', 'background', 'years', 'duration'],
+            'languages': ['speak', 'fluent', 'communication', 'tongue', 'dialect'],
+            'certifications': ['certified', 'accreditation', 'qualification', 'badge', 'credential'],
+            'projects': ['work', 'developed', 'built', 'created', 'implemented'],
+            'achievements': ['awards', 'recognition', 'accomplishments', 'successes', 'milestones'],
+            'company': ['employer', 'organization', 'firm', 'workplace', 'corporation'],
+            'role': ['position', 'job title', 'responsibility', 'function', 'designation'],
+            'location': ['place', 'city', 'country', 'area', 'region'],
+            'ctc': ['salary', 'compensation', 'package', 'pay', 'remuneration'],
+            'notice': ['period', 'joining', 'start date', 'availability', 'timeline']
+        }
+        
+        # Find matching semantic mappings
+        for key, synonyms in semantic_mappings.items():
+            if key in field_name.lower() or any(word in field_name.lower() for word in key.split()):
+                semantic_keywords.extend(synonyms)
+                break
+        
+        # Add content-based keywords
+        if isinstance(field_value, list):
+            for item in field_value:
+                if isinstance(item, str):
+                    item_words = item.lower().split()
+                    semantic_keywords.extend(item_words)
+        
+        # TODO: Future Enhancement - Use AI (Gemma) to generate better synonyms
+        # This would make the system even more intelligent
+        # semantic_keywords.extend(SearchUtils._generate_ai_synonyms(field_name, field_value))
+        
+        # Remove duplicates and return
+        return list(set(semantic_keywords))
+    
+    @staticmethod
+    def _generate_ai_synonyms(field_name, field_value):
+        """Future enhancement: Use AI to generate semantic synonyms"""
+        # This would call Gemma or another AI model to generate better synonyms
+        # For now, return empty list - you can implement this later
+        return []
+    
+    @staticmethod
+    def _build_dynamic_mappings(profile_data):
+        """Build keyword mappings dynamically from profile data using AI-generated semantics"""
+        print("🔍 Building dynamic semantic mappings from profile data...")
+        
+        # Extract all fields from profile
+        all_fields = SearchUtils._extract_all_fields_from_profile(profile_data)
+        
+        # Build semantic mappings for each field
+        semantic_mappings = {}
+        
+        for field_name, field_info in all_fields.items():
+            field_type = field_info['type']
+            field_value = field_info['value']
+            
+            # Generate semantic keywords for this field
+            semantic_keywords = SearchUtils._generate_semantic_keywords_for_field(
+                field_name, field_value, field_type
+            )
+            
+            # Create category name from field
+            category_name = field_name.replace('_', ' ').lower()
+            
+            # Add to semantic mappings
+            if category_name not in semantic_mappings:
+                semantic_mappings[category_name] = []
+            
+            semantic_mappings[category_name].extend(semantic_keywords)
+        
+        # Remove duplicates from each category
+        for category in semantic_mappings:
+            semantic_mappings[category] = list(set(semantic_mappings[category]))
+        
+        print(f"🎯 Generated {len(semantic_mappings)} semantic categories with AI-enhanced keywords")
+        
+        return semantic_mappings
+    
+    @staticmethod
     def find_relevant_context_simple(query, profile_data, top_k=5):
         """Simple keyword-based fallback search for profile data"""
         query_lower = query.lower()
@@ -46,26 +182,14 @@ class SearchUtils:
         print(f"🔍 Simple search for: '{query}'")
         print(f"📊 Profile data has {len(profile_data)} chunks")
         
-        # Define keyword mappings for common questions
-        keyword_mappings = {
-            'name': ['name', 'mushini', 'gopala', 'swamy'],
-            'experience': ['experience', 'years', '6.2', '6+'],
-            'skills': ['skills', 'programming', 'java', 'python', 'javascript'],
-            'ctc': ['ctc', 'salary', 'lpa', '31'],
-            'relocation': ['relocation', 'relocate', 'open to'],
-            'project': ['project', 'eod', 'fintech', 'work'],
-            'notice': ['notice', 'period', '45', '60'],
-            'company': ['company', 'rocket', 'software', 'working'],
-            'languages': ['languages', 'java', 'python', 'javascript', 'telugu', 'hindi'],
-            'who': ['name', 'mushini', 'gopala', 'swamy', 'senior', 'engineer'],
-            'what': ['skills', 'experience', 'role', 'company']
-        }
+        # Dynamic keyword mappings based on profile content
+        dynamic_mappings = SearchUtils._build_dynamic_mappings(profile_data)
         
         # Find the best matching category
         best_category = None
         best_score = 0
         
-        for category, keywords in keyword_mappings.items():
+        for category, keywords in dynamic_mappings.items():
             score = sum(1 for keyword in keywords if keyword in query_lower)
             if score > best_score:
                 best_score = score
@@ -88,7 +212,7 @@ class SearchUtils:
             print(f"🎯 Using category-specific matching for '{best_category}'...")
             for chunk in profile_data:
                 chunk_lower = chunk.lower()
-                category_keywords = keyword_mappings.get(best_category, [])
+                category_keywords = dynamic_mappings.get(best_category, [])
                 score = sum(1 for keyword in category_keywords if keyword in chunk_lower)
                 if score > 0:
                     relevant.append((score, chunk))

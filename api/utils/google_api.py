@@ -64,14 +64,26 @@ class GoogleGeminiAPI:
             
             # Construct system prompt with context
             context_text = "\n".join([f"- {ctx}" for ctx in relevant_context])
+            
+            # Get dynamic profile summary
+            profile_data = self.load_profile_data()
+            profile_summary = self._create_profile_summary(profile_data)
+            
             system_prompt = f"""You are Mushini Gopala Swamy, working as Senior Software Engineer.
 
 You are in the job search process and need to answer recruiters based on your profile.
 
+IMPORTANT: ONLY provide information that is explicitly present in the profile data below. If you don't have specific information about something, respond with: "I don't have that information to provide." DO NOT make up or hallucinate any information.
+
+PROFILE INFORMATION:
+{profile_summary}
+
 Context or Data:
 {context_text}
 
-Please provide a clear, professional answer as if you are Mushini Gopala Swamy responding to a recruiter. Use the context information above to give accurate and helpful answers about your experience, skills, and preferences. If the context doesn't contain enough information to answer the question, say so politely and ask for clarification.
+Please provide a clear, professional answer as if you are Mushini Gopala Swamy responding to a recruiter. Use ONLY the context information above to give accurate and helpful answers about your experience, skills, and preferences. 
+
+If the context doesn't contain enough information to answer the question, respond with: "I don't have that information to provide." in a formal, professional tone.
 
 Remember to maintain consistency with your previous responses in the conversation history."""
 
@@ -126,3 +138,53 @@ Remember to maintain consistency with your previous responses in the conversatio
         except Exception as e:
             print(f"Error getting Google embedding: {e}")
             return None
+
+    def load_profile_data(self):
+        """Load profile data from JSON file"""
+        try:
+            profile_file = 'data/myprofile.json'
+            if os.path.exists(profile_file):
+                with open(profile_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            else:
+                print(f"Profile file not found at: {profile_file}")
+                return {}
+        except Exception as e:
+            print(f"Error loading profile data: {e}")
+            return {}
+    
+    def _create_profile_summary(self, profile_data):
+        """Create a concise summary of profile data dynamically"""
+        summary_parts = []
+        
+        # Process all fields dynamically
+        for key, value in profile_data.items():
+            if value and key not in ['_id', 'created_at', 'updated_at']:  # Skip metadata fields
+                if isinstance(value, str) and len(value) < 100:
+                    # Short string fields
+                    summary_parts.append(f"{key.replace('_', ' ').title()}: {value}")
+                elif isinstance(value, (int, float)):
+                    # Numeric fields
+                    if key == 'experience_years':
+                        summary_parts.append(f"Experience: {value} years")
+                    else:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {value}")
+                elif isinstance(value, list) and len(value) > 0:
+                    # Array fields - show first few items
+                    if len(value) <= 3:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {', '.join(str(item) for item in value)}")
+                    else:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {', '.join(str(item) for item in value[:3])}...")
+                elif isinstance(value, dict) and value:
+                    # Nested objects - show key fields
+                    nested_summary = []
+                    for nested_key, nested_value in value.items():
+                        if nested_value and isinstance(nested_value, (str, int, float)):
+                            nested_summary.append(f"{nested_key.replace('_', ' ').title()}: {nested_value}")
+                        elif isinstance(nested_value, list) and nested_value:
+                            nested_summary.append(f"{nested_key.replace('_', ' ').title()}: {', '.join(str(item) for item in nested_value[:2])}")
+                    
+                    if nested_summary:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {'; '.join(nested_summary)}")
+        
+        return "\n".join(summary_parts)

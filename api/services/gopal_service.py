@@ -44,7 +44,9 @@ class GopalService:
         
         # Process nested objects dynamically
         for key, value in profile.items():
+            print(f"🔍 Processing field: {key} (type: {type(value).__name__})")
             if key in simple_fields:
+                print(f"   ⏭️ Skipping simple field: {key}")
                 continue  # Skip already processed fields
                 
             if isinstance(value, dict):
@@ -67,6 +69,7 @@ class GopalService:
             elif isinstance(value, list):
                 # Handle arrays like work_experience, achievements, personal_projects, specializations
                 if value:
+                    print(f"🔍 Processing array field: {key} with {len(value)} items")
                     if key == 'work_experience':
                         # Special handling for work experience
                         for exp in value:
@@ -92,7 +95,10 @@ class GopalService:
                     else:
                         # Generic handling for other arrays
                         array_text = f"{key.replace('_', ' ').title()}: {', '.join(str(item) for item in value)}"
+                        print(f"   📝 Created generic array chunk: {array_text[:50]}...")
                         chunks.append(array_text)
+            else:
+                print(f"   ⚠️ Unhandled field type: {key} = {value}")
         
         return chunks
     

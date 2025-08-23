@@ -51,13 +51,17 @@ class PerplexityAPI:
 
 You are in the job search process and need to answer recruiters based on your profile.
 
+IMPORTANT: ONLY provide information that is explicitly present in the profile data below. If you don't have specific information about something, respond with: "I don't have that information to provide." DO NOT make up or hallucinate any information.
+
 PROFILE INFORMATION:
 {profile_summary}
 
 RELEVANT CONTEXT FOR THIS QUESTION:
 {chr(10).join([f"- {ctx}" for ctx in relevant_context])}
 
-Please provide a clear, professional answer as if you are Mushini Gopala Swamy responding to a recruiter. Use the profile information and context above to give accurate and helpful answers about your experience, skills, and preferences. If the context doesn't contain enough information to answer the question, say so politely and ask for clarification.
+Please provide a clear, professional answer as if you are Mushini Gopala Swamy responding to a recruiter. Use ONLY the profile information and context above to give accurate and helpful answers about your experience, skills, and preferences.
+
+If the context doesn't contain enough information to answer the question, respond with: "I don't have that information to provide." in a formal, professional tone.
 
 Remember to maintain consistency with your previous responses in the conversation history."""
         
@@ -74,40 +78,38 @@ Remember to maintain consistency with your previous responses in the conversatio
         return messages
     
     def _create_profile_summary(self, profile_data):
-        """Create a concise summary of profile data"""
+        """Create a concise summary of profile data dynamically"""
         summary_parts = []
         
-        # Basic info
-        if profile_data.get('name'):
-            summary_parts.append(f"Name: {profile_data['name']}")
-        if profile_data.get('current_role'):
-            summary_parts.append(f"Current Role: {profile_data['current_role']}")
-        if profile_data.get('current_company'):
-            summary_parts.append(f"Company: {profile_data['current_company']}")
-        if profile_data.get('experience_years'):
-            summary_parts.append(f"Experience: {profile_data['experience_years']} years")
-        if profile_data.get('current_location'):
-            summary_parts.append(f"Location: {profile_data['current_location']}")
-        
-        # Skills summary
-        if profile_data.get('skills'):
-            skills = profile_data['skills']
-            skill_summary = []
-            for category, skill_list in skills.items():
-                if isinstance(skill_list, list):
-                    skill_summary.append(f"{category}: {', '.join(skill_list[:3])}")
-            if skill_summary:
-                summary_parts.append(f"Key Skills: {'; '.join(skill_summary)}")
-        
-        # Job preferences
-        if profile_data.get('job_preferences'):
-            prefs = profile_data['job_preferences']
-            if prefs.get('current_ctc'):
-                summary_parts.append(f"Current CTC: {prefs['current_ctc']}")
-            if prefs.get('expected_ctc'):
-                summary_parts.append(f"Expected CTC: {prefs['expected_ctc']}")
-            if prefs.get('negotiable_notice_period'):
-                summary_parts.append(f"Notice Period: {prefs['negotiable_notice_period']} days")
+        # Process all fields dynamically
+        for key, value in profile_data.items():
+            if value and key not in ['_id', 'created_at', 'updated_at']:  # Skip metadata fields
+                if isinstance(value, str) and len(value) < 100:
+                    # Short string fields
+                    summary_parts.append(f"{key.replace('_', ' ').title()}: {value}")
+                elif isinstance(value, (int, float)):
+                    # Numeric fields
+                    if key == 'experience_years':
+                        summary_parts.append(f"Experience: {value} years")
+                    else:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {value}")
+                elif isinstance(value, list) and len(value) > 0:
+                    # Array fields - show first few items
+                    if len(value) <= 3:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {', '.join(str(item) for item in value)}")
+                    else:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {', '.join(str(item) for item in value[:3])}...")
+                elif isinstance(value, dict) and value:
+                    # Nested objects - show key fields
+                    nested_summary = []
+                    for nested_key, nested_value in value.items():
+                        if nested_value and isinstance(nested_value, (str, int, float)):
+                            nested_summary.append(f"{nested_key.replace('_', ' ').title()}: {nested_value}")
+                        elif isinstance(nested_value, list) and nested_value:
+                            nested_summary.append(f"{nested_key.replace('_', ' ').title()}: {', '.join(str(item) for item in nested_value[:2])}")
+                    
+                    if nested_summary:
+                        summary_parts.append(f"{key.replace('_', ' ').title()}: {'; '.join(nested_summary)}")
         
         return "\n".join(summary_parts)
     
@@ -127,7 +129,10 @@ Remember to maintain consistency with your previous responses in the conversatio
                 "max_tokens": 1024,
                 "temperature": 0.7,
                 "top_p": 0.95,
-                "citations": False
+                "citations": False,
+                "include_citations": False,
+                "search_recency_filter": "month",
+                "disable_search": True
             }
             
             headers = {
@@ -142,7 +147,15 @@ Remember to maintain consistency with your previous responses in the conversatio
             
             if response.status_code == 200:
                 result = response.json()
-                return result["choices"][0]['message']['content']
+                response_text = result["choices"][0]['message']['content']
+                
+                # Remove citation markers like [1], [2], [3], etc.
+                import re
+                cleaned_response = re.sub(r'\[\d+\]', '', response_text)
+                # Also remove any extra spaces that might be left
+                cleaned_response = re.sub(r'\s+', ' ', cleaned_response).strip()
+                
+                return cleaned_response
             else:
                 print(f"Perplexity API error: {response.status_code} - {response.text}")
                 return f"Sorry, I encountered an error. Please try again. (Error: {response.status_code})"
