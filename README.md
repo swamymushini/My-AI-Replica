@@ -21,6 +21,39 @@ User Query → Embedding → Similarity Search → Context Retrieval → Gemini 
 Input    Query        Conversations   Similar      Contextual  Answer
 ```
 
+## 🏗️ Modular Code Structure
+
+The codebase has been refactored into a clean, modular architecture for better maintainability and readability:
+
+### **Module Responsibilities**
+
+| Module | Purpose | Key Functions |
+|--------|---------|---------------|
+| **`config/env_loader.py`** | Environment configuration | `load_env_file()`, `get_api_key()` |
+| **`utils/embedding_utils.py`** | Embedding management | `EmbeddingManager`, embedding creation & caching |
+| **`utils/search_utils.py`** | Search algorithms | `SearchUtils`, similarity search, fallback search |
+| **`utils/api_utils.py`** | Gemini API interactions | `GeminiAPI`, response generation |
+| **`services/gopal_service.py`** | Business logic orchestration | `GopalService`, query handling |
+| **`handlers/api_handler.py`** | HTTP request handling | `APIHandler`, CORS, routing |
+
+### **Benefits of Modular Structure**
+
+✅ **Improved Readability** - Each module has a single, clear responsibility  
+✅ **Better Maintainability** - Changes to one module don't affect others  
+✅ **Enhanced Testability** - Each module can be tested independently  
+✅ **Code Reusability** - Utility functions can be reused across modules  
+✅ **Professional Structure** - Industry-standard code organization
+
+### **Data Organization**
+
+The project now has a clean data structure:
+
+| Folder | Purpose | Contents |
+|--------|---------|----------|
+| **`data/`** | Knowledge base and profile data | `conversation_data.json`, `email_data.json`, `myprofile.json` |
+| **`cache/`** | Generated embeddings and temporary files | `conversation_embeddings.pkl` |
+| **`api/`** | Application code and logic | All Python modules and handlers |
+
 ## 🛠️ Technologies Used
 
 - **Python 3.8+** - Core language
@@ -35,12 +68,33 @@ Input    Query        Conversations   Similar      Contextual  Answer
 ```
 My-AI-Replica/
 ├── api/
-│   └── index.py              # Main Vercel function
-├── conversation_data.json     # Knowledge base (227 Q&A pairs)
-├── conversation_embeddings.pkl # Cached embeddings (auto-generated)
-├── requirements.txt           # Python dependencies
-├── .gitignore                # Git ignore rules
-└── README.md                 # This file
+│   ├── __init__.py                 # Package initialization
+│   ├── index.py                    # Main entry point (simplified)
+│   ├── config/
+│   │   ├── __init__.py            # Config package
+│   │   └── env_loader.py          # Environment configuration
+│   ├── utils/
+│   │   ├── __init__.py            # Utils package
+│   │   ├── embedding_utils.py     # Embedding management
+│   │   ├── search_utils.py        # Search and similarity
+│   │   └── api_utils.py           # Gemini API interactions
+│   ├── services/
+│   │   ├── __init__.py            # Services package
+│   │   └── gopal_service.py       # Main business logic
+│   └── handlers/
+│       ├── __init__.py            # Handlers package
+│       └── api_handler.py         # HTTP request handling
+├── data/
+│   ├── __init__.py                # Data package
+│   ├── conversation_data.json     # Knowledge base (227 Q&A pairs)
+│   ├── email_data.json            # Email templates and responses
+│   └── myprofile.json             # Personal profile information
+├── cache/
+│   ├── __init__.py                # Cache package
+│   └── conversation_embeddings.pkl # Cached embeddings (auto-generated)
+├── requirements.txt               # Python dependencies
+├── .gitignore                    # Git ignore rules
+└── README.md                     # This file
 ```
 
 ## 🚀 Quick Start
@@ -66,6 +120,12 @@ echo "GOOGLE_API_KEY=your_google_api_key_here" > .env
 ```bash
 cd api
 python index.py
+```
+
+### 5. Test Modular Structure (Optional)
+```bash
+# From project root
+python test_modular.py
 ```
 
 ## 🌐 Deploy to Vercel

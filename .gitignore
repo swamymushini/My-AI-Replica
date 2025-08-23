@@ -53,4 +53,7 @@ Thumbs.db
 *.temp
 
 # Embeddings cache (optional - you can commit this if you want)
-# conversation_embeddings.pkl
+# cache/conversation_embeddings.pkl
+
+# Cache directory (optional - you can commit this if you want)
+# cache/
