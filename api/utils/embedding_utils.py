@@ -1,15 +1,15 @@
-import requests
 import hashlib
 import pickle
 import os
 import time
-from api.config.env_loader import get_api_key
+from api.utils.google_api import GoogleGeminiAPI
 
 class EmbeddingManager:
     def __init__(self, embeddings_file='cache/profile_embeddings.pkl'):
         self.embeddings_file = embeddings_file
         self.embeddings_cache = {}
         self.user_query_cache = {}
+        self.google_api = GoogleGeminiAPI()
     
     def load_or_create_embeddings(self, profile_data):
         """Load existing embeddings or create new ones"""
@@ -68,30 +68,8 @@ class EmbeddingManager:
             print(f"Error saving embeddings: {e}")
     
     def get_embedding(self, text):
-        """Get embedding from Google API"""
-        try:
-            api_key = get_api_key()
-            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}'
-            
-            data = {
-                "model": "models/gemini-embedding-001",
-                "content": {
-                    "parts": [{"text": text}]
-                }
-            }
-            
-            response = requests.post(url, json=data, timeout=10)
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result['embedding']['values']
-            else:
-                print(f"Embedding API error: {response.status_code} - {response.text}")
-                return None
-                
-        except Exception as e:
-            print(f"Error getting embedding: {e}")
-            return None
+        """Get embedding using the configured AI provider"""
+        return self.google_api.get_embedding(text)
     
     def get_cached_embedding(self, text):
         """Get cached embedding or create new one"""

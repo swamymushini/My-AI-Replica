@@ -128,7 +128,7 @@
             "name": "Instagram Meme Bot",
             "link": "https://www.instagram.com/the__code__couple/",
             "description": "Developed an AI-driven Instagram bot that leverages OpenAI to generate witty, software-industry-related meme captions. Integrated with Meta’s Graph API to automate daily content uploads directly to Instagram, ensuring consistent engagement and reach.",
-            "skills": [
+            "tech_stack": [
                 "Python",
                 "OpenAI",
                 "Instagram API"
@@ -142,7 +142,7 @@
             "name": "Personal AI Replica",
             "link": "http://gopalaswamy.me",
             "description": "Developed an AI-powered bot and integrated it into my portfolio website to assist recruiters. The bot answers questions about my notice period, salary, employment history, and skills, effectively acting as an AI version of me to streamline job application queries.",
-            "skills": [
+            "tech_stack": [
                 "React",
                 "Google AI Platform"
             ]
@@ -150,7 +150,7 @@
         {
             "name": "AI Job Application Automation",
             "description": "Built an automation system to apply for jobs across platforms like Hirist, Naukri, and Instahyre. Implemented web automation to handle applications and integrated it with my Personal Replica Bot to auto-fill and answer job-related questions, streamlining the application process.",
-            "skills": [
+            "tech_stack": [
                 "Selenium",
                 "Java",
                 "Python",
@@ -181,6 +181,7 @@
     "reason_for_change": "It’s been more than 3 years in my current role, and I’ve learned a lot and am truly thankful for the experience. I feel it’s the right time to push my boundaries and challenge myself by working on large-scale products that involve handling bottlenecks and more complex problems.",
     "best_work": {
         "name": "EOD - FinTech",
+        "company": "Pennant Technologies",
         "description": "Migrated an EOD loan processing system into a microservices architecture capable of processing 10M+ loans per day, improving scalability, reliability, and performance in a financial domain environment.",
         "work_done": [
             "Led the migration of a monolithic EOD loan processing system to a scalable, distributed microservices architecture, improving system reliability and scalability to handle millions of records.",
