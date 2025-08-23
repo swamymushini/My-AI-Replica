@@ -1,0 +1,200 @@
+{
+    "name": "Mushini Gopala Swamy",
+    "dob": "05-12-1998",
+    "email": "swamymushini@gmail.com",
+    "secondary_email": "swamymushini2@gmail.com",
+    "phone": "+91 955-330-7417",
+    "secondary_phone": "+91 9110-760-301",
+    "portfolio": "http://gopalaswamy.me",
+    "resume_link": "http://gopalaswamy.me/#/resume",
+    "linkedin": "https://www.linkedin.com/in/gopal-swamy-sde3/",
+    "github": "https://github.com/swamymushini",
+    "scaler": "https://www.scaler.com/academy/profile/c44c523094a9/",
+    "current_location": "Pune, India",
+    "gender": "male",
+    "race_ethnicity": "Asian",
+    "nationality": "Indian",
+    "first_name": "Gopala",
+    "last_name": "Mushini",
+    "experience_years": 6.2,
+    "current_company": "Rocket Software",
+    "current_role": "Senior Software Engineer",
+    "previous_company": "Pennant Technologies",
+    "education": {
+        "degree": "B.Tech in Electrical Engineering",
+        "university": "Jawaharlal Nehru Technological University",
+        "duration": "Jul 2015 - Apr 2019"
+    },
+    "specializations": [
+        "Software Engineering specialization from Scaler Academy",
+        "Topics: DSA, HLD, LLD, Distributed Systems",
+        "Profile link: https://www.scaler.com/academy/profile/c44c523094a9/"
+    ],
+    "skills": {
+        "languages": [
+            "Java",
+            "Python",
+            "JavaScript"
+        ],
+        "frameworks_libraries": [
+            "Spring Boot",
+            "REST API",
+            "ReactJS",
+            "Node.js"
+        ],
+        "databases": [
+            "PostgreSQL",
+            "MySQL",
+            "MongoDB",
+            "OracleDB",
+            "Cassandra"
+        ],
+        "cloud": [
+            "AWS (EC2, SQS, SNS, Lambda, S3, CloudFront, CloudWatch)"
+        ],
+        "tools": [
+            "Git",
+            "JIRA",
+            "Kubernetes",
+            "Docker",
+            "Jenkins",
+            "Postman"
+        ],
+        "system_design": [
+            "HLD",
+            "LLD",
+            "Distributed Systems",
+            "Microservices Architecture",
+            "Event-Driven Architecture"
+        ],
+        "testing": [
+            "JUnit",
+            "Mockito",
+            "TDD"
+        ],
+        "AI/ML": [
+            "LLM fine-tuning",
+            "LangChain",
+            "Agents",
+            "MongoDB aggregation for AI"
+        ],
+        "infra": [
+            "Elasticsearch",
+            "Redis",
+            "Kafka"
+        ]
+    },
+    "work_experience": [
+        {
+            "company": "Rocket Software",
+            "role": "Senior Software Engineer",
+            "location": "Pune, India",
+            "duration": "Feb 2022 – Present",
+            "responsibilities": [
+                "Architected and scaled distributed microservices using Spring Boot, Kafka, and AWS, powering critical EDI workflows and document processing systems used by Fortune 500 clients.",
+                "Designed and deployed a fully automated, usage-based customer billing system, eliminating 95% of manual errors and saving 120+ hours of effort per quarter, while boosting operational productivity by 40%.",
+                "Led the integration of secure, scalable authentication by implementing a JWT-based login system with Okta SSO, enhancing cross-service user experience and strengthening platform security.",
+                "Built a cloud-native API integration platform to fetch and synchronize orders from Shopify and Amazon Marketplace, doubling customer onboarding rate and reducing developer effort through reusable Lambda connectors.",
+                "Developed an AI-driven document filtering system using fine-tuned LLaMA and Mistral-22B models to convert natural language queries into filterable JSON, enabling instant document discovery via voice or text.",
+                "Designed and orchestrated LangChain-powered AI agents to interpret EDI-specific business queries and generate MongoDB aggregations, delivering real-time analytics dashboards from unstructured document metadata.",
+                "Delivered real-time usage insights and cost breakdowns to customers via self-service dashboards, improving billing transparency and increasing customer satisfaction by over 80%."
+            ]
+        },
+        {
+            "company": "Pennant Technologies",
+            "role": "Software Engineer",
+            "location": "Vizag, India",
+            "duration": "Jun 2019 – Feb 2022",
+            "responsibilities": [
+                "Migrated a monolithic EOD loan processing system to a distributed microservices architecture, enabling parallel execution of loan records and improving system performance by 50% through Kafka-based event-driven orchestration.",
+                "Designed and implemented a resilient microservices environment with idempotent processing, retry mechanisms, and DLQ handling on Kubernetes, ensuring zero data loss and improving system throughput by 30%.",
+                "Optimized backend performance using advanced SQL tuning and database partitioning strategies to support high-volume financial transactions with minimal latency.",
+                "Built a payment interface for EMI and partial loan payments with real-time notifications and caching, enhancing user experience and reducing redundant database hits.",
+                "Engineered a high-throughput receipt upload system capable of handling 10,000+ receipts instantly, improving processing efficiency by 65% using multi-threading and asynchronous handling.",
+                "Improved observability and fault tolerance across loan processing pipelines by integrating monitoring and alerting hooks into core microservices, reducing incident resolution time.",
+                "Developed CI/CD pipelines and ensured high test coverage and smooth production deployments of microservice modules in a fast-paced fintech environment."
+            ]
+        }
+    ],
+    "achievements": [
+        "Star Performer Certification (Two Consecutive Years: 2020, 2021)",
+        "Spot Award (Three Times in Three Quarters: 2023-2025)",
+        "Finalist - Rocket Build Hackathon (2024, 2025)",
+        "Scaled monolithic EOD system to microservices, improving reliability by 45%",
+        "Designed and deployed AI-powered document assistant using LangChain and LLM agents"
+    ],
+    "personal_projects": [
+        {
+            "name": "Instagram Meme Bot",
+            "link": "https://www.instagram.com/the__code__couple/",
+            "description": "Developed an AI-driven Instagram bot that leverages OpenAI to generate witty, software-industry-related meme captions. Integrated with Meta’s Graph API to automate daily content uploads directly to Instagram, ensuring consistent engagement and reach.",
+            "skills": [
+                "Python",
+                "OpenAI",
+                "Instagram API"
+            ]
+        },
+        {
+            "name": "CodeExpert Tool",
+            "description": "AI-based VS Code extension acting as a coding assistant, leveraging Code Llama LLM and AWS SageMaker."
+        },
+        {
+            "name": "Personal AI Replica",
+            "link": "http://gopalaswamy.me",
+            "description": "Developed an AI-powered bot and integrated it into my portfolio website to assist recruiters. The bot answers questions about my notice period, salary, employment history, and skills, effectively acting as an AI version of me to streamline job application queries.",
+            "skills": [
+                "React",
+                "Google AI Platform"
+            ]
+        },
+        {
+            "name": "AI Job Application Automation",
+            "description": "Built an automation system to apply for jobs across platforms like Hirist, Naukri, and Instahyre. Implemented web automation to handle applications and integrated it with my Personal Replica Bot to auto-fill and answer job-related questions, streamlining the application process.",
+            "skills": [
+                "Selenium",
+                "Java",
+                "Python",
+                "Google AI Platform"
+            ]
+        }
+    ],
+    "job_preferences": {
+        "current_ctc": "31 LPA (26.35 fixed + 4.65 bonus and PF & gratuity)",
+        "ctc_breakdown": {
+            "fixed": "26.35 LPA",
+            "bonus": "2.10 LPA",
+            "pf_gratuity": "2.55 LPA"
+        },
+        "expected_ctc": "38 LPA",
+        "actual_notice_period": "60 days",
+        "negotiable_notice_period": "45 days",
+        "preferred_locations": [
+            "Remote preferably",
+            "Anywhere in India",
+            "Dubai",
+            "Singapore",
+            "US",
+            "Ireland"
+        ],
+        "open_to_relocation": "Yes"
+    },
+    "reason_for_change": "It’s been more than 3 years in my current role, and I’ve learned a lot and am truly thankful for the experience. I feel it’s the right time to push my boundaries and challenge myself by working on large-scale products that involve handling bottlenecks and more complex problems.",
+    "best_work": {
+        "name": "EOD - FinTech",
+        "description": "Migrated an EOD loan processing system into a microservices architecture capable of processing 10M+ loans per day, improving scalability, reliability, and performance in a financial domain environment.",
+        "work_done": [
+            "Led the migration of a monolithic EOD loan processing system to a scalable, distributed microservices architecture, improving system reliability and scalability to handle millions of records.",
+            "Implemented Kafka-based event-driven architecture for real-time message handling, ensuring efficient batch processing and fault tolerance.",
+            "Designed and implemented batch processing strategies, dividing large loan records into smaller batches and ensuring high parallelism across microservices.",
+            "Developed a robust retry mechanism with exponential backoff and Dead Letter Queue (DLQ) integration for handling message processing failures and ensuring data integrity.",
+            "Optimized consumer offset management in Kafka to prevent message loss and duplication, ensuring idempotent and reliable processing.",
+            "Automated failure detection and recovery by integrating monitoring systems and alerts to track processing statuses and trigger manual intervention when needed.",
+            "Improved database interaction by partitioning loan records and optimizing queries, reducing load on the monolithic database.",
+            "Deployed microservices on a containerized infrastructure using Docker and Kubernetes, ensuring high availability and fault tolerance.",
+            "Enhanced real-time data processing performance by implementing timeouts, rate limiting, and resource scaling techniques to prevent bottlenecks.",
+            "Developed APIs and services to enable smooth interaction between workers and the message queue, facilitating seamless batch processing.",
+            "Increased system throughput and reduced processing time by leveraging parallel processing and distributing workload across multiple services.",
+            "Ensured compliance with industry standards for financial data handling and processing, maintaining accuracy and consistency across the system."
+        ]
+    }
+}
