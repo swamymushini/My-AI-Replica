@@ -57,3 +57,7 @@ Thumbs.db
 
 # Cache directory (optional - you can commit this if you want)
 # cache/
+
+# Test files (local testing only)
+test.py
+simple_test.py

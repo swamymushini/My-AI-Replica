@@ -1,32 +1,91 @@
 import requests
+import json
+import os
 from api.config.env_loader import get_api_key
 
 class GeminiAPI:
     @staticmethod
+    def load_conversation_history():
+        """Load conversation history from JSON file"""
+        try:
+            # Try to load from the data directory relative to the project root
+            conversation_file = 'data/conversation_data.json'
+            if os.path.exists(conversation_file):
+                with open(conversation_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            else:
+                print(f"Conversation file not found at: {conversation_file}")
+                return []
+        except Exception as e:
+            print(f"Error loading conversation history: {e}")
+            return []
+    
+    @staticmethod
+    def build_conversation_parts(conversation_history, current_query):
+        """Build the parts array with conversation history and current query"""
+        parts = []
+        
+        # Add conversation history
+        for conv in conversation_history:
+            # Add user question
+            parts.append({
+                "role": "user",
+                "parts": [{"text": conv["userQuestion"]}]
+            })
+            
+            # Add model answer
+            parts.append({
+                "role": "model", 
+                "parts": [{"text": conv["modelAnswer"]}]
+            })
+        
+        # Add current query
+        parts.append({
+            "role": "user",
+            "parts": [{"text": current_query}]
+        })
+        
+        return parts
+    
+    @staticmethod
     def generate_response_with_context(query, relevant_context):
-        """Generate response using Gemini API with context"""
+        """Generate response using Gemini API with context and conversation history"""
         try:
             api_key = get_api_key()
-            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}'
+            url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}'
+            
+            # Load conversation history
+            conversation_history = GeminiAPI.load_conversation_history()
+            
+            # Build conversation parts
+            conversation_parts = GeminiAPI.build_conversation_parts(conversation_history, query)
             
             # Construct system prompt with context
             context_text = "\n".join([f"- {ctx}" for ctx in relevant_context])
             system_prompt = f"""You are Mushini Gopala Swamy, working as Senior Software Engineer.
 
-You need to search for jobs and need to answer recruiters based on their questions.
-
-User Question: {query}
+You are in the job search process and need to answer recruiters based on your profile.
 
 Context or Data:
 {context_text}
 
-Please provide a clear, professional answer as if you are Mushini Gopala Swamy responding to a recruiter. Use the context information above to give accurate and helpful answers about your experience, skills, and preferences. If the context doesn't contain enough information to answer the question, say so politely and ask for clarification."""
+Please provide a clear, professional answer as if you are Mushini Gopala Swamy responding to a recruiter. Use the context information above to give accurate and helpful answers about your experience, skills, and preferences. If the context doesn't contain enough information to answer the question, say so politely and ask for clarification.
 
+Remember to maintain consistency with your previous responses in the conversation history."""
+
+            # Create the request payload with conversation history
             data = {
-                "contents": [{
-                    "parts": [{"text": system_prompt}]
-                }]
+                "contents": conversation_parts,
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
+                    "maxOutputTokens": 1024,
+                }
             }
+            
+            print(f"🤖 Sending request to Gemini with {len(conversation_parts)} conversation parts")
+            print(f"📝 Current query: {query}")
             
             response = requests.post(url, json=data, timeout=15)
             

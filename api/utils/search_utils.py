@@ -43,15 +43,58 @@ class SearchUtils:
         query_lower = query.lower()
         relevant = []
         
-        for chunk in profile_data:
-            chunk_lower = chunk.lower()
-            
-            # Check if query words appear in profile chunk
-            query_words = query_lower.split()
-            score = sum(1 for word in query_words if word in chunk_lower)
-            
-            if score > 0:
-                relevant.append((score, chunk))
+        print(f"🔍 Simple search for: '{query}'")
+        print(f"📊 Profile data has {len(profile_data)} chunks")
+        
+        # Define keyword mappings for common questions
+        keyword_mappings = {
+            'name': ['name', 'mushini', 'gopala', 'swamy'],
+            'experience': ['experience', 'years', '6.2', '6+'],
+            'skills': ['skills', 'programming', 'java', 'python', 'javascript'],
+            'ctc': ['ctc', 'salary', 'lpa', '31'],
+            'relocation': ['relocation', 'relocate', 'open to'],
+            'project': ['project', 'eod', 'fintech', 'work'],
+            'notice': ['notice', 'period', '45', '60'],
+            'company': ['company', 'rocket', 'software', 'working'],
+            'languages': ['languages', 'java', 'python', 'javascript', 'telugu', 'hindi'],
+            'who': ['name', 'mushini', 'gopala', 'swamy', 'senior', 'engineer'],
+            'what': ['skills', 'experience', 'role', 'company']
+        }
+        
+        # Find the best matching category
+        best_category = None
+        best_score = 0
+        
+        for category, keywords in keyword_mappings.items():
+            score = sum(1 for keyword in keywords if keyword in query_lower)
+            if score > best_score:
+                best_score = score
+                best_category = category
+        
+        print(f"🎯 Best category: {best_category} (score: {best_score})")
+        
+        # If no specific category found, use general word matching
+        if best_score == 0:
+            print("🔄 Using general word matching...")
+            for chunk in profile_data:
+                chunk_lower = chunk.lower()
+                query_words = query_lower.split()
+                score = sum(1 for word in query_words if word in chunk_lower)
+                if score > 0:
+                    relevant.append((score, chunk))
+                    print(f"   ✅ Found match (score: {score}): {chunk[:50]}...")
+        else:
+            # Use category-specific matching
+            print(f"🎯 Using category-specific matching for '{best_category}'...")
+            for chunk in profile_data:
+                chunk_lower = chunk.lower()
+                category_keywords = keyword_mappings.get(best_category, [])
+                score = sum(1 for keyword in category_keywords if keyword in chunk_lower)
+                if score > 0:
+                    relevant.append((score, chunk))
+                    print(f"   ✅ Found match (score: {score}): {chunk[:50]}...")
+        
+        print(f"📚 Total relevant chunks found: {len(relevant)}")
         
         # Sort by score and get top k
         relevant.sort(key=lambda x: x[0], reverse=True)
